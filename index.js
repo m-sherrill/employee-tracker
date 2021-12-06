@@ -5,30 +5,114 @@ const dotenv = require('dotenv')
 dotenv.config();
 
 const inquirer = require('inquirer')
-const mysql = require('mysql2')
+const { initialPrompt, addDepartment, addRole, addEmployee, exitInquirer } = require('./inquirer')
+const { db, allDepartmentsQuery, allRolesQuery, allEmployeesQuery } = require('./queries')
+const tools = require("terminaltools")
+var banner = tools.banner("Hello")
 
-console.log(process.env.DB_HOST, process.env.DB_ROOT, process.env.DB_PASS)
+console.log(banner)
 
-// database connection
-const db = mysql.createConnection(
-    {
-      'host': process.env.DB_HOST,
-      'user': process.env.DB_USER,
-      'password': process.env.DB_PASS,
-      'database': process.env.DB_NAME,
-    },
-    console.log(`Connected to the ${process.env.DB_NAME} database.`)
-  );
+function startPrompts() {
+  inquirer.prompt(initialPrompt)
+    .then((answers) => {
+      switch (answers.initialPrompt) {
+        case "View All Departments":
+          console.log("in switch 1")
+          viewAllDepartments(answers)
+          break;
+        case "View All Roles":
+          viewAllRoles(answers)
+          console.log("In switch 2")
+          break;
+        case "View all Employees":
+          viewAllEmployees(answers)
+          console.log("In switch 3")
+          break
+        case "Add a Department":
+          console.log("In switch 4")
+          addNewDepartment(answers)
+          break
+        case "Add a Role":
+          console.log("In switch 5")
+          addNewRole(answers)
+          break
+        case "Add an Employee":
+          addNewEmployee(answers)
+          console.log("In switch 6")
+          break
+        case "Exit Program":
+          console.log("In switch 7")
+          exitInquirerFunction(answers)
+          break
+        default:
+          break
+      }
 
-  
-  db.query('SELECT * FROM department', function (err, results) {
+    })
+}
+
+function exitInquirerFunction (data) {
+  inquirer.prompt(exitInquirer)
+  .then((answers) => {
+    if (true) {
+      process.exit()
+    } else {
+      startPrompts(answers)
+    }
+  })
+}
+
+function viewAllDepartments(data) {
+  db.query(allDepartmentsQuery, function (err, results) {
     console.log(results);
+    exitInquirerFunction()
   });
 
-  db.query('SELECT * FROM role', function (err, results) {
-    console.log(results);
-  });
+}
 
-  db.query('SELECT * FROM employee', function (err, results) {
+function viewAllRoles(data) {
+  db.query(allRolesQuery, function (err, results) {
     console.log(results);
+    exitInquirerFunction()
   });
+}
+
+function viewAllEmployees(data) {
+  db.query(allEmployeesQuery, function (err, results) {
+    console.log(results);
+    exitInquirerFunction()
+  });
+}
+
+function addNewDepartment(data) {
+  console.log("In addnewdepartment function!!!!!")
+  inquirer.prompt(addDepartment)
+    .then((answers) => {
+      console.log(answers)
+    })
+    exitInquirerFunction()
+}
+
+function addNewRole(data) {
+  console.log("In addNewRole FUNCTION!!!!!!!")
+  inquirer.prompt(addRole)
+    .then((answers) => {
+      console.log(answers)
+      exitInquirerFunction()
+    })
+
+}
+
+function addNewEmployee(data) {
+  console.log("In addNewEmployee function!!!!!!")
+  inquirer.prompt(addEmployee)
+    .then((answers) => {
+      console.log(answers)
+      exitInquirerFunction()
+    })
+
+}
+
+
+
+startPrompts()

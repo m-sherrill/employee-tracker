@@ -25,6 +25,7 @@
     "express": "^4.17.1",
     "inquirer": "^8.2.0",
     "mysql2": "^2.3.3",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "terminaltools": "^2.0.1"
   }
 }
