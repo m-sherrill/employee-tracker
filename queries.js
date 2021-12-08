@@ -21,9 +21,12 @@ const allRolesQuery = 'SELECT * FROM role'
 
 const allEmployeesQuery = 'SELECT * FROM employee'
 
+const deptNameQuery = 'SELECT name FROM department'
+
 module.exports = {
     db,
     allDepartmentsQuery,
     allEmployeesQuery,
-    allRolesQuery
+    allRolesQuery,
+    deptNameQuery
 }

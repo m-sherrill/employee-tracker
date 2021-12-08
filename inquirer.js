@@ -1,6 +1,7 @@
 // inquirer question constants
 // need to query the database to get options for department and managers
 const inquirer = require('inquirer')
+const { db } = require('./queries')
 
 const initialPrompt = [
     {
@@ -48,18 +49,7 @@ const addRole = [
             }
             return true;
         },
-    },
-    {
-        name: "roleDepartment",
-        type: "input",
-        message: "What department should this be assigned to?",
-        validate: function (answer) {
-            if (answer.length < 1) {
-                return console.log("Please enter a team name");
-            }
-            return true;
-        },
-    },
+    }
 ]
 
 const addEmployee = [

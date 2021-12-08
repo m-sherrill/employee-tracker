@@ -6,13 +6,15 @@ dotenv.config();
 
 const inquirer = require('inquirer')
 const { initialPrompt, addDepartment, addRole, addEmployee, exitInquirer } = require('./inquirer')
-const { db, allDepartmentsQuery, allRolesQuery, allEmployeesQuery } = require('./queries')
+const { db, allDepartmentsQuery, allRolesQuery, allEmployeesQuery, deptNameQuery } = require('./queries')
 const tools = require("terminaltools")
 var banner = tools.banner("Hello")
 
+const pluck = (arr, key) => arr.map(i => i[key])
+
 console.log(banner)
 
-function startPrompts() {
+function init() {
   inquirer.prompt(initialPrompt)
     .then((answers) => {
       switch (answers.initialPrompt) {
@@ -51,15 +53,13 @@ function startPrompts() {
     })
 }
 
-function exitInquirerFunction (data) {
+function exitInquirerFunction(data) {
   inquirer.prompt(exitInquirer)
-  .then((answers) => {
-    if (true) {
-      process.exit()
-    } else {
-      startPrompts(answers)
-    }
-  })
+    .then((answers) => {
+      if (!true) {
+        init()
+      } 
+    })
 }
 
 function viewAllDepartments(data) {
@@ -85,23 +85,60 @@ function viewAllEmployees(data) {
 }
 
 function addNewDepartment(data) {
-  console.log("In addnewdepartment function!!!!!")
   inquirer.prompt(addDepartment)
     .then((answers) => {
-      console.log(answers)
+      console.log(answers.departmentName)
+      db.query("INSERT INTO department (name) VALUES(?)", `${answers.departmentName}`, function (err, results) {
+        console.log("New Department Added")
+        viewAllDepartments()
+      })
     })
-    exitInquirerFunction()
 }
 
-function addNewRole(data) {
-  console.log("In addNewRole FUNCTION!!!!!!!")
-  inquirer.prompt(addRole)
-    .then((answers) => {
-      console.log(answers)
-      exitInquirerFunction()
-    })
 
+function addNewRole() {
+  db.query(deptNameQuery, function (err, results) {
+    console.log(results)
+    const array = pluck(results, "name")
+    inquirer.prompt(
+      [
+        {
+          name: "roleName",
+          type: "input",
+          message: "What is the name of this role?",
+          validate: function (answer) {
+            if (answer.length < 1) {
+              return console.log("Please enter a team name");
+            }
+            return true;
+          },
+        },
+        {
+          name: "roleSalary",
+          type: "input",
+          message: "What is the salary for this role?",
+          validate: function (answer) {
+            if (answer.length < 1) {
+              return console.log("Please enter a team name");
+            }
+            return true;
+          },
+        },
+        {
+          name: "roleDepartment",
+          type: "list",
+          message: "What department should this be assigned to?",
+          choices: array
+        }
+      ]
+    )
+      .then((answers) => {
+        console.log(answers)
+        exitInquirerFunction()
+      })
+  })
 }
+
 
 function addNewEmployee(data) {
   console.log("In addNewEmployee function!!!!!!")
@@ -110,9 +147,8 @@ function addNewEmployee(data) {
       console.log(answers)
       exitInquirerFunction()
     })
-
 }
 
 
 
-startPrompts()
+init()
