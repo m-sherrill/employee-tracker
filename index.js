@@ -7,7 +7,7 @@ dotenv.config();
 // linking to other files and modules
 const inquirer = require('inquirer')
 const db = require('./db/db')
-const { allDepartmentsQuery, allDepartmentsDisplay, allRolesQuery, allRolesDisplay, allEmployeesQuery, allEmployeesDisplay, insertDepartment, insertRole, insertEmployee } = require('./queries')
+const { allDepartmentsQuery, allDepartmentsDisplay, allRolesQuery, allRolesDisplay, allEmployeesQuery, allEmployeesDisplay, insertDepartment, insertRole, insertEmployee } = require('./db/queries')
 const consoleTable = require('console.table')
 const showBanner = require('node-banner')
 
