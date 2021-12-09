@@ -1,91 +1,99 @@
 // main file which will run the application in node. 
-// linking to dotenv 
 
+// linking to dotenv 
 const dotenv = require('dotenv')
 dotenv.config();
 
+// linking to other files and modules
 const inquirer = require('inquirer')
-const { initialPrompt, addDepartment, addRole, addEmployee, exitInquirer } = require('./inquirer')
-const { db, allDepartmentsQuery, allRolesQuery, allEmployeesQuery, deptNameQuery, insertDepartment, insertRole, insertEmployee } = require('./queries')
-const tools = require("terminaltools")
-var banner = tools.banner("Hello")
+const db = require('./db/db')
+const { initialPrompt, addDepartment, exitInquirer } = require('./inquirer')
+const { allDepartmentsQuery, allRolesQuery, allEmployeesQuery, insertDepartment, insertRole, insertEmployee, roleAlias, deptAlias, employeeAlias } = require('./queries')
+const consoleTable = require('console.table')
+const showBanner = require('node-banner')
 
-const pluck = (arr, key) => arr.map(i => i[key])
 
-console.log(banner)
+async function init() {
+  await showBanner('Employee Tracker', '', 'blue')
+  startPrompts()
+  }
 
 // Main Init
-function init() {
-  inquirer.prompt(initialPrompt)
+function startPrompts(){
+  inquirer.prompt(
+    [
+      {
+          name: "initialPrompt",
+          type: "list",
+          message: "What would you like to view first?",
+          choices: ["View All Departments", "View All Roles", "View all Employees", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", `Exit Program
+      `],
+      }
+  ]
+  )
     .then((answers) => {
       switch (answers.initialPrompt) {
         case "View All Departments":
-          console.log("in switch 1")
-          viewAllDepartments(answers)
+          viewAllDepartments()
           break;
         case "View All Roles":
-          viewAllRoles(answers)
-          console.log("In switch 2")
+          viewAllRoles()
           break;
         case "View all Employees":
-          viewAllEmployees(answers)
-          console.log("In switch 3")
+          viewAllEmployees()
           break
         case "Add a Department":
-          console.log("In switch 4")
-          addNewDepartment(answers)
+          addNewDepartment()
           break
         case "Add a Role":
-          console.log("In switch 5")
-          addNewRole(answers)
+          addNewRole()
           break
         case "Add an Employee":
-          addNewEmployee(answers)
-          console.log("In switch 6")
+          addNewEmployee()
           break
-        case "Exit Program":
-          console.log("In switch 7")
-          exitInquirerFunction(answers)
+        case "Update an Employee Role":
+          updateEmployee()
           break
         default:
+          exitInquirerFunction()
           break
       }
-
     })
 }
 
 // View all Departments
-function viewAllDepartments(data) {
+function viewAllDepartments() {
   db.query(allDepartmentsQuery, function (err, results) {
-    console.log(results);
-    exitInquirerFunction()
-  });
-
+    console.table(results);
+    startPrompts()
+})
 }
 
 // View all Roles
-function viewAllRoles(data) {
+function viewAllRoles() {
   db.query(allRolesQuery, function (err, results) {
-    console.log(results);
-    exitInquirerFunction()
-  });
+    console.table(results);
+    startPrompts()
+})
 }
 
 // View all Employees
-function viewAllEmployees(data) {
+function viewAllEmployees() {
   db.query(allEmployeesQuery, function (err, results) {
-    console.log(results);
-    exitInquirerFunction()
-  });
+    db.query(employeeAlias, function (err, results) {
+    console.table(results);
+    startPrompts()
+  })
+})
 }
 
 // Add a new department
-function addNewDepartment(data) {
+function addNewDepartment() {
   inquirer.prompt(addDepartment)
     .then((answers) => {
       db.query(insertDepartment, `${answers.departmentName}`, function (err, results) {
         console.log("New Department Added")
-        viewAllDepartments()
+        startPrompts()
       })
     })
 }
@@ -93,13 +101,13 @@ function addNewDepartment(data) {
 // Add a new role
 function addNewRole() {
   db.query(allDepartmentsQuery, function (err, results) {
-    var cleanArray = []
+    var deptArray = []
     for (let i = 0; i < results.length; i++) {
       var obj = {
         name: results[i].name,
         value: results[i].id
       }
-      cleanArray.push(obj)
+      deptArray.push(obj)
     }
     inquirer.prompt(
       [
@@ -129,21 +137,21 @@ function addNewRole() {
           name: "roleDepartment",
           type: "list",
           message: "What department should this be assigned to?",
-          choices: cleanArray
+          choices: deptArray
         }
       ]
     )
       .then((answers) => {
         db.query(insertRole, [answers.roleName, answers.roleSalary, answers.roleDepartment], function (err, results) {
           console.log("Your new role has been added!")
-          init()
+          startPrompts()
         })
       })
   })
 }
 
-
-function addNewEmployee(data) {
+// Add a new employee
+function addNewEmployee() {
   db.query(allRolesQuery, function (err, results) {
     var roleArray = []
     for (let i = 0; i < results.length; i++) {
@@ -155,67 +163,72 @@ function addNewEmployee(data) {
     }
     db.query(allEmployeesQuery, function (err, results) {
       var managersArray = []
-        for (let i = 0; i < results.length; i++) {
-          var obj2 = {
-            name: results[i].first_name + " " + results[i].last_name,
-            value: results[i].id
-          }
-          managersArray.push(obj2)
+      for (let i = 0; i < results.length; i++) {
+        var obj2 = {
+          name: results[i].first_name + " " + results[i].last_name,
+          value: results[i].id
         }
-        managersArray.push({name: "No Manager", value: null})
-        inquirer.prompt(
-          [
-            {
-              name: "employeeFirstName",
-              type: "input",
-              message: "What is the employee's first name?",
-              validate: function (answer) {
-                if (answer.length < 1) {
-                  return console.log("Please enter a first name");
-                }
-                return true;
-              },
+        managersArray.push(obj2)
+      }
+      managersArray.push({ name: "No Manager", value: null })
+      inquirer.prompt(
+        [
+          {
+            name: "employeeFirstName",
+            type: "input",
+            message: "What is the employee's first name?",
+            validate: function (answer) {
+              if (answer.length < 1) {
+                return console.log("Please enter a first name");
+              }
+              return true;
             },
-            {
-              name: "employeeLastName",
-              type: "input",
-              message: "What is the employee's last name?",
-              validate: function (answer) {
-                if (answer.length < 1) {
-                  return console.log("Please a last name");
-                }
-                return true;
-              },
+          },
+          {
+            name: "employeeLastName",
+            type: "input",
+            message: "What is the employee's last name?",
+            validate: function (answer) {
+              if (answer.length < 1) {
+                return console.log("Please a last name");
+              }
+              return true;
             },
-            {
-              name: "employeeRole",
-              type: "list",
-              message: "What role is this employee in?",
-              choices: roleArray
-            },
-            {
-              name: "employeeManager",
-              type: "list",
-              message: "Who is this employee's manager?",
-              choices: managersArray
-            }
-          ]
-        )
+          },
+          {
+            name: "employeeRole",
+            type: "list",
+            message: "What role is this employee in?",
+            choices: roleArray
+          },
+          {
+            name: "employeeManager",
+            type: "list",
+            message: "Who is this employee's manager?",
+            choices: managersArray
+          }
+        ]
+      )
         .then((answers) => {
           db.query(insertEmployee, [answers.employeeFirstName, answers.employeeLastName, answers.employeeRole, answers.employeeManager], function (err, results) {
             console.log("Your new Employee has been added!")
-            init()
+            startPrompts()
           })
         })
-      })
+    })
   })
 }
 
+function updateEmployee() {
+
+}
+
 // exit program
-function exitInquirerFunction(data) {
+function exitInquirerFunction() {
   inquirer.prompt(exitInquirer)
     .then((answers) => {
-      if (answers == true) {
+      if (answers.exit === true) {
+        console.log("Thank you for using the Employee Tracker. Have a nice day!")
         process.exit()
       } else {
         init()
@@ -223,5 +236,5 @@ function exitInquirerFunction(data) {
     })
 }
 
-
+// Starting the program
 init()
