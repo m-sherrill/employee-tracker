@@ -7,8 +7,8 @@ dotenv.config();
 // linking to other files and modules
 const inquirer = require('inquirer')
 const db = require('./db/db')
-const { initialPrompt, addDepartment, exitInquirer } = require('./inquirer')
-const { allDepartmentsQuery, allRolesQuery, allEmployeesQuery, insertDepartment, insertRole, insertEmployee, roleAlias, deptAlias, employeeAlias } = require('./queries')
+const { addDepartment, exitInquirer } = require('./inquirer')
+const { allDepartmentsQuery, allRolesQuery, allEmployeesQuery, insertDepartment, insertRole, insertEmployee } = require('./queries')
 const consoleTable = require('console.table')
 const showBanner = require('node-banner')
 
@@ -77,13 +77,12 @@ function viewAllRoles() {
 })
 }
 
-// View all Employees
+// View all Employees -- need to figure out how to make the manager's name appear
 function viewAllEmployees() {
   db.query(allEmployeesQuery, function (err, results) {
-    db.query(employeeAlias, function (err, results) {
+    console.log(results)
     console.table(results);
     startPrompts()
-  })
 })
 }
 

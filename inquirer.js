@@ -1,14 +1,5 @@
 // inquirer question constants
 
-const initialPrompt = [
-    {
-        name: "initialPrompt",
-        type: "list",
-        message: "What would you like to view first?",
-        choices: ["View All Departments", "View All Roles", "View all Employees", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", `Exit Program
-    `],
-    }
-]
 
 const addDepartment = [
     {
