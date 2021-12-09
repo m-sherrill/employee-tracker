@@ -6,7 +6,7 @@ dotenv.config();
 
 const inquirer = require('inquirer')
 const { initialPrompt, addDepartment, addRole, addEmployee, exitInquirer } = require('./inquirer')
-const { db, allDepartmentsQuery, allRolesQuery, allEmployeesQuery, deptNameQuery, insertDepartment, insertRole } = require('./queries')
+const { db, allDepartmentsQuery, allRolesQuery, allEmployeesQuery, deptNameQuery, insertDepartment, insertRole, insertEmployee } = require('./queries')
 const tools = require("terminaltools")
 var banner = tools.banner("Hello")
 
@@ -83,7 +83,6 @@ function viewAllEmployees(data) {
 function addNewDepartment(data) {
   inquirer.prompt(addDepartment)
     .then((answers) => {
-      console.log(answers.departmentName)
       db.query(insertDepartment, `${answers.departmentName}`, function (err, results) {
         console.log("New Department Added")
         viewAllDepartments()
@@ -94,7 +93,6 @@ function addNewDepartment(data) {
 // Add a new role
 function addNewRole() {
   db.query(allDepartmentsQuery, function (err, results) {
-    console.log(results)
     var cleanArray = []
     for (let i = 0; i < results.length; i++) {
       var obj = {
@@ -103,9 +101,6 @@ function addNewRole() {
       }
       cleanArray.push(obj)
     }
-
-    console.log(cleanArray)
-
     inquirer.prompt(
       [
         {
@@ -139,33 +134,81 @@ function addNewRole() {
       ]
     )
       .then((answers) => {
-        console.log(answers.roleName, answers.roleSalary, answers.roleDepartment)
         db.query(insertRole, [answers.roleName, answers.roleSalary, answers.roleDepartment], function (err, results) {
           console.log("Your new role has been added!")
-        init()
+          init()
         })
       })
   })
 }
 
 
-async function addNewEmployee(data) {
-  const dbRoles = (results) => db.query(deptNameQuery, (err, results) => {
-    return
+function addNewEmployee(data) {
+  db.query(allRolesQuery, function (err, results) {
+    var roleArray = []
+    for (let i = 0; i < results.length; i++) {
+      var obj = {
+        name: results[i].title,
+        value: results[i].id
+      }
+      roleArray.push(obj)
+    }
+    db.query(allEmployeesQuery, function (err, results) {
+      var managersArray = []
+        for (let i = 0; i < results.length; i++) {
+          var obj2 = {
+            name: results[i].first_name + " " + results[i].last_name,
+            value: results[i].id
+          }
+          managersArray.push(obj2)
+        }
+        managersArray.push({name: "No Manager", value: null})
+        inquirer.prompt(
+          [
+            {
+              name: "employeeFirstName",
+              type: "input",
+              message: "What is the employee's first name?",
+              validate: function (answer) {
+                if (answer.length < 1) {
+                  return console.log("Please enter a first name");
+                }
+                return true;
+              },
+            },
+            {
+              name: "employeeLastName",
+              type: "input",
+              message: "What is the employee's last name?",
+              validate: function (answer) {
+                if (answer.length < 1) {
+                  return console.log("Please a last name");
+                }
+                return true;
+              },
+            },
+            {
+              name: "employeeRole",
+              type: "list",
+              message: "What role is this employee in?",
+              choices: roleArray
+            },
+            {
+              name: "employeeManager",
+              type: "list",
+              message: "Who is this employee's manager?",
+              choices: managersArray
+            }
+          ]
+        )
+        .then((answers) => {
+          db.query(insertEmployee, [answers.employeeFirstName, answers.employeeLastName, answers.employeeRole, answers.employeeManager], function (err, results) {
+            console.log("Your new Employee has been added!")
+            init()
+          })
+        })
+      })
   })
-
-  const dbEmployees = db.query(deptNameQuery, (err, results) => {
-    return results
-  })
-
-  console.log(dbEmployees.name)
-
-  // inquirer.prompt(addEmployee)
-  //   .then((answers) => {
-  //     console.log(answers)
-  //     exitInquirerFunction()
-  //   })
-
 }
 
 // exit program

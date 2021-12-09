@@ -25,7 +25,8 @@ const insertDepartment = 'INSERT INTO department (name) VALUES(?)'
 
 const insertRole = 'INSERT INTO role (title, salary, department_ID) VALUES(?,?,?)'
 
-const deptNameQuery = 'SELECT name FROM department'
+const insertEmployee = 'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES(?,?,?,?)'
+
 
 module.exports = {
     db,
@@ -33,6 +34,6 @@ module.exports = {
     allEmployeesQuery,
     allRolesQuery,
     insertDepartment,
-    deptNameQuery,
-    insertRole
+    insertRole,
+    insertEmployee
 }
