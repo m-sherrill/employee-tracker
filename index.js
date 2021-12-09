@@ -8,12 +8,14 @@ dotenv.config();
 const inquirer = require('inquirer')
 const db = require('./db/db')
 const { allDepartmentsQuery, allDepartmentsDisplay, allRolesQuery, allRolesDisplay, allEmployeesQuery, allEmployeesDisplay, insertDepartment, insertRole, insertEmployee } = require('./db/queries')
+const chalk = require('chalk');
 const consoleTable = require('console.table')
 const showBanner = require('node-banner')
 
 
 async function init() {
   await showBanner('Employee Tracker', '', 'blue')
+  await console.log(chalk.bold.red("Welcome to the company employee tracker!"))
   startPrompts()
 }
 
@@ -24,7 +26,7 @@ function startPrompts() {
       {
         name: "initialPrompt",
         type: "list",
-        message: "What would you like to view first?",
+        message: chalk.bold.blue("What would you like to do? Select and option below."),
         choices: ["View All Departments", "View All Roles", "View all Employees", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", `Exit Program
       `],
       }
@@ -93,7 +95,7 @@ function addNewDepartment() {
       message: "What is the department name?",
       validate: function (answer) {
         if (answer.length < 1) {
-          return console.log("Please enter a team name");
+          return console.log(chalk.bold.red("Please enter a department name"))
         }
         return true;
       },
@@ -101,7 +103,7 @@ function addNewDepartment() {
   ])
     .then((answers) => {
       db.query(insertDepartment, `${answers.departmentName}`, function (err, results) {
-        console.log("New Department Added")
+        console.log(chalk.bold.red("New Department Has Been Added"))
         startPrompts()
       })
     })
@@ -126,7 +128,7 @@ function addNewRole() {
           message: "What is the name of this role?",
           validate: function (answer) {
             if (answer.length < 1) {
-              return console.log("Please enter a team name");
+              return console.log(chalk.bold.red("Please enter the name of the role"));
             }
             return true;
           },
@@ -136,8 +138,8 @@ function addNewRole() {
           type: "input",
           message: "What is the salary for this role?",
           validate: function (answer) {
-            if (answer.length < 1) {
-              return console.log("Please enter a team name");
+            if (isNaN(answer)) {
+              return console.log(chalk.bold.red("Please enter a number"));
             }
             return true;
           },
@@ -152,7 +154,7 @@ function addNewRole() {
     )
       .then((answers) => {
         db.query(insertRole, [answers.roleName, answers.roleSalary, answers.roleDepartment], function (err, results) {
-          console.log("Your new role has been added!")
+          console.log(chalk.bold.red("Your new role has been added!"))
           startPrompts()
         })
       })
@@ -174,7 +176,7 @@ function addNewEmployee() {
       var managersArray = []
       for (let i = 0; i < results.length; i++) {
         var obj2 = {
-          name: results[i].first_name + " " + results[i].last_name,
+          name: `${results[i].first_name} ${results[i].last_name}`,
           value: results[i].id
         }
         managersArray.push(obj2)
@@ -188,7 +190,7 @@ function addNewEmployee() {
             message: "What is the employee's first name?",
             validate: function (answer) {
               if (answer.length < 1) {
-                return console.log("Please enter a first name");
+                return console.log(chalk.bold.red("Please enter a first name"));
               }
               return true;
             },
@@ -199,7 +201,7 @@ function addNewEmployee() {
             message: "What is the employee's last name?",
             validate: function (answer) {
               if (answer.length < 1) {
-                return console.log("Please a last name");
+                return console.log(chalk.bold.red("Please enter a last name"));
               }
               return true;
             },
@@ -220,7 +222,7 @@ function addNewEmployee() {
       )
         .then((answers) => {
           db.query(insertEmployee, [answers.employeeFirstName, answers.employeeLastName, answers.employeeRole, answers.employeeManager], function (err, results) {
-            console.log("Your new Employee has been added!")
+            console.log(chalk.bold.red("Your new Employee has been added!"))
             startPrompts()
           })
         })
@@ -266,7 +268,7 @@ function updateEmployee() {
       )
         .then((answers) => {
           db.query(`UPDATE employee SET role_id=${answers.employeeNewRole} WHERE id=${answers.employeeNames}`, function (err, results) {
-            console.log(`Employee's title has been added!`)
+            console.log(chalk.bold.red(`Employee's title has been updated!`))
             startPrompts()
           })
         })
@@ -285,7 +287,7 @@ function exitInquirerFunction() {
   ])
     .then((answers) => {
       if (answers.exit === true) {
-        console.log("Thank you for using the Employee Tracker. Have a nice day!")
+        console.log(chalk.bold.blue("Thank you for using the Employee Tracker. Have a nice day!"))
         process.exit()
       } else {
         init()

@@ -21,16 +21,6 @@ const insertRole = 'INSERT INTO role (title, salary, department_ID) VALUES(?,?,?
 
 const insertEmployee = 'INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES(?,?,?,?)'
 
-const updateEmployee = ""
-
-// const employeeAlias = `SELECT id AS "Employee ID",
-// first_name AS "First Name",
-// last_name AS "Last Name",
-// role_id AS "Role ID",
-// COALESCE(manager_id, "No Manager") AS "Manager ID"
-// FROM employee`
-
-
 module.exports = {
     allDepartmentsQuery,
     allEmployeesQuery,
