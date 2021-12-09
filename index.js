@@ -7,8 +7,7 @@ dotenv.config();
 // linking to other files and modules
 const inquirer = require('inquirer')
 const db = require('./db/db')
-const { addDepartment, exitInquirer } = require('./inquirer')
-const { allDepartmentsQuery, allRolesQuery, allEmployeesQuery, insertDepartment, insertRole, insertEmployee } = require('./queries')
+const { allDepartmentsQuery, allDepartmentsDisplay, allRolesQuery, allRolesDisplay, allEmployeesQuery, allEmployeesDisplay, insertDepartment, insertRole, insertEmployee } = require('./queries')
 const consoleTable = require('console.table')
 const showBanner = require('node-banner')
 
@@ -16,20 +15,20 @@ const showBanner = require('node-banner')
 async function init() {
   await showBanner('Employee Tracker', '', 'blue')
   startPrompts()
-  }
+}
 
 // Main Init
-function startPrompts(){
+function startPrompts() {
   inquirer.prompt(
     [
       {
-          name: "initialPrompt",
-          type: "list",
-          message: "What would you like to view first?",
-          choices: ["View All Departments", "View All Roles", "View all Employees", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", `Exit Program
+        name: "initialPrompt",
+        type: "list",
+        message: "What would you like to view first?",
+        choices: ["View All Departments", "View All Roles", "View all Employees", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", `Exit Program
       `],
       }
-  ]
+    ]
   )
     .then((answers) => {
       switch (answers.initialPrompt) {
@@ -63,32 +62,43 @@ function startPrompts(){
 
 // View all Departments
 function viewAllDepartments() {
-  db.query(allDepartmentsQuery, function (err, results) {
+  db.query(allDepartmentsDisplay, function (err, results) {
     console.table(results);
     startPrompts()
-})
+  })
 }
 
 // View all Roles
 function viewAllRoles() {
-  db.query(allRolesQuery, function (err, results) {
+  db.query(allRolesDisplay, function (err, results) {
     console.table(results);
     startPrompts()
-})
+  })
 }
 
 // View all Employees -- need to figure out how to make the manager's name appear
 function viewAllEmployees() {
-  db.query(allEmployeesQuery, function (err, results) {
-    console.log(results)
+  db.query(allEmployeesDisplay, function (err, results) {
     console.table(results);
     startPrompts()
-})
+  })
 }
 
 // Add a new department
 function addNewDepartment() {
-  inquirer.prompt(addDepartment)
+  inquirer.prompt([
+    {
+      name: "departmentName",
+      type: "input",
+      message: "What is the department name?",
+      validate: function (answer) {
+        if (answer.length < 1) {
+          return console.log("Please enter a team name");
+        }
+        return true;
+      },
+    },
+  ])
     .then((answers) => {
       db.query(insertDepartment, `${answers.departmentName}`, function (err, results) {
         console.log("New Department Added")
@@ -218,13 +228,61 @@ function addNewEmployee() {
   })
 }
 
+// Update an employee's role
 function updateEmployee() {
-
+  db.query(allEmployeesQuery, function (err, results) {
+    var allEmployeesArray = []
+    for (let index = 0; index < results.length; index++) {
+      var obj = {
+        name: `${results[index].first_name} ${results[index].last_name}`,
+        value: results[index].id
+      }
+      allEmployeesArray.push(obj)
+    }
+    db.query(allRolesQuery, function (err, results) {
+      var roleArray = []
+      for (let i = 0; i < results.length; i++) {
+        var obj = {
+          name: results[i].title,
+          value: results[i].id
+        }
+        roleArray.push(obj)
+      }
+      inquirer.prompt(
+        [
+          {
+            name: "employeeNames",
+            type: "list",
+            message: "What is the employee's name?",
+            choices: allEmployeesArray
+          },
+          {
+            name: "employeeNewRole",
+            type: "list",
+            message: "What is the employee's new role?",
+            choices: roleArray
+          }
+        ]
+      )
+        .then((answers) => {
+          db.query(`UPDATE employee SET role_id=${answers.employeeNewRole} WHERE id=${answers.employeeNames}`, function (err, results) {
+            console.log(`Employee's title has been added!`)
+            startPrompts()
+          })
+        })
+    })
+  })
 }
 
 // exit program
 function exitInquirerFunction() {
-  inquirer.prompt(exitInquirer)
+  inquirer.prompt([
+    {
+      type: 'confirm',
+      name: 'exit',
+      message: 'Would you like to exit?'
+    },
+  ])
     .then((answers) => {
       if (answers.exit === true) {
         console.log("Thank you for using the Employee Tracker. Have a nice day!")
