@@ -6,7 +6,7 @@ dotenv.config();
 
 const inquirer = require('inquirer')
 const { initialPrompt, addDepartment, addRole, addEmployee, exitInquirer } = require('./inquirer')
-const { db, allDepartmentsQuery, allRolesQuery, allEmployeesQuery, deptNameQuery } = require('./queries')
+const { db, allDepartmentsQuery, allRolesQuery, allEmployeesQuery, deptNameQuery, insertDepartment, insertRole } = require('./queries')
 const tools = require("terminaltools")
 var banner = tools.banner("Hello")
 
@@ -14,6 +14,7 @@ const pluck = (arr, key) => arr.map(i => i[key])
 
 console.log(banner)
 
+// Main Init
 function init() {
   inquirer.prompt(initialPrompt)
     .then((answers) => {
@@ -53,15 +54,7 @@ function init() {
     })
 }
 
-function exitInquirerFunction(data) {
-  inquirer.prompt(exitInquirer)
-    .then((answers) => {
-      if (!true) {
-        init()
-      } 
-    })
-}
-
+// View all Departments
 function viewAllDepartments(data) {
   db.query(allDepartmentsQuery, function (err, results) {
     console.log(results);
@@ -70,6 +63,7 @@ function viewAllDepartments(data) {
 
 }
 
+// View all Roles
 function viewAllRoles(data) {
   db.query(allRolesQuery, function (err, results) {
     console.log(results);
@@ -77,6 +71,7 @@ function viewAllRoles(data) {
   });
 }
 
+// View all Employees
 function viewAllEmployees(data) {
   db.query(allEmployeesQuery, function (err, results) {
     console.log(results);
@@ -84,22 +79,33 @@ function viewAllEmployees(data) {
   });
 }
 
+// Add a new department
 function addNewDepartment(data) {
   inquirer.prompt(addDepartment)
     .then((answers) => {
       console.log(answers.departmentName)
-      db.query("INSERT INTO department (name) VALUES(?)", `${answers.departmentName}`, function (err, results) {
+      db.query(insertDepartment, `${answers.departmentName}`, function (err, results) {
         console.log("New Department Added")
         viewAllDepartments()
       })
     })
 }
 
-
+// Add a new role
 function addNewRole() {
-  db.query(deptNameQuery, function (err, results) {
+  db.query(allDepartmentsQuery, function (err, results) {
     console.log(results)
-    const array = pluck(results, "name")
+    var cleanArray = []
+    for (let i = 0; i < results.length; i++) {
+      var obj = {
+        name: results[i].name,
+        value: results[i].id
+      }
+      cleanArray.push(obj)
+    }
+
+    console.log(cleanArray)
+
     inquirer.prompt(
       [
         {
@@ -128,27 +134,51 @@ function addNewRole() {
           name: "roleDepartment",
           type: "list",
           message: "What department should this be assigned to?",
-          choices: array
+          choices: cleanArray
         }
       ]
     )
       .then((answers) => {
-        console.log(answers)
-        exitInquirerFunction()
+        console.log(answers.roleName, answers.roleSalary, answers.roleDepartment)
+        db.query(insertRole, [answers.roleName, answers.roleSalary, answers.roleDepartment], function (err, results) {
+          console.log("Your new role has been added!")
+        init()
+        })
       })
   })
 }
 
 
-function addNewEmployee(data) {
-  console.log("In addNewEmployee function!!!!!!")
-  inquirer.prompt(addEmployee)
-    .then((answers) => {
-      console.log(answers)
-      exitInquirerFunction()
-    })
+async function addNewEmployee(data) {
+  const dbRoles = (results) => db.query(deptNameQuery, (err, results) => {
+    return
+  })
+
+  const dbEmployees = db.query(deptNameQuery, (err, results) => {
+    return results
+  })
+
+  console.log(dbEmployees.name)
+
+  // inquirer.prompt(addEmployee)
+  //   .then((answers) => {
+  //     console.log(answers)
+  //     exitInquirerFunction()
+  //   })
+
 }
 
+// exit program
+function exitInquirerFunction(data) {
+  inquirer.prompt(exitInquirer)
+    .then((answers) => {
+      if (answers == true) {
+        process.exit()
+      } else {
+        init()
+      }
+    })
+}
 
 
 init()
