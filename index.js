@@ -16,7 +16,7 @@ const showBanner = require('node-banner')
 async function init() {
   await showBanner('Employee Tracker', '', 'blue')
   await console.log(chalk.bold.red("Welcome to the company employee tracker!"))
-  startPrompts()
+  await startPrompts()
 }
 
 // Main Init

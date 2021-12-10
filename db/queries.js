@@ -1,6 +1,3 @@
-// Database and Queries
-const mysql = require('mysql2')
-
 // Queries
 
 const allDepartmentsQuery = `SELECT * FROM department`
