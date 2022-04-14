@@ -232,22 +232,30 @@ function addNewEmployee() {
 
 // Update an employee's role
 function updateEmployee() {
+  // all departments query
   db.query(allEmployeesQuery, function (err, results) {
+    // blank array to store the employees
     var allEmployeesArray = []
     for (let index = 0; index < results.length; index++) {
       var obj = {
+        // creating the array. Put first and last name on the same line. Use the back ticks to get them put together. Then set the value as what you want the inquirer results to display. In my function when I reference the inquirer results it displays the employee id verses the first and last name even though that is what the user picked and saw. 
         name: `${results[index].first_name} ${results[index].last_name}`,
         value: results[index].id
       }
+      // store these results in the array for employees
       allEmployeesArray.push(obj)
     }
+    // second query to reference all the roles
     db.query(allRolesQuery, function (err, results) {
+      // blank array to store the results
       var roleArray = []
       for (let i = 0; i < results.length; i++) {
         var obj = {
+          // set the name as the title so it shows the title in inquirer but the answers i can reference in the .then will be the value
           name: results[i].title,
           value: results[i].id
         }
+        // push those results to this secont array
         roleArray.push(obj)
       }
       inquirer.prompt(
@@ -256,17 +264,18 @@ function updateEmployee() {
             name: "employeeNames",
             type: "list",
             message: "What is the employee's name?",
-            choices: allEmployeesArray
+            choices: allEmployeesArray // added the all employee array to this question -- displays employee names
           },
           {
             name: "employeeNewRole",
             type: "list",
             message: "What is the employee's new role?",
-            choices: roleArray
+            choices: roleArray // added the all role array to this question -- displays the role titles
           }
         ]
       )
         .then((answers) => {
+          // query to update the employee role. Since I set the value to the IDs, when I reference them in this query, it inputs the ID numbers verses the first name / last name / role title
           db.query(`UPDATE employee SET role_id=${answers.employeeNewRole} WHERE id=${answers.employeeNames}`, function (err, results) {
             console.log(chalk.bold.red(`Employee's title has been updated!`))
             startPrompts()
